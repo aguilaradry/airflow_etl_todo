@@ -6,18 +6,20 @@ import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from scripts.extract import extract_data
 from scripts.load import load_data
-#TODO importa los módulos faltantes
+from scripts.transform import transform_data
+from scripts.cleaning import cleaning_data
+
 
 default_args = {
     'owner': 'airflow',
 }
 
 with DAG(
-    dag_id='etl_airtravel',
+    dag_id='etl_olist',
     default_args=default_args,
-    start_date=datetime(2024, 1, 1),
-    #TODO definir la periodicidad
-    #schedule=,
+    start_date=datetime(2025, 4, 3),
+    #definir la periodicidad
+    schedule='@daily',
     catchup=False,
     tags=['ETL', 'CSV', 'sqlite'],
 ) as dag:
@@ -31,9 +33,16 @@ with DAG(
         task_id='load_data',
         python_callable=load_data
     )
-    #TODO define la tarea de limpieza
-    
-    #TODO define la tarea de transformación
 
-    #TODO completa la definición de dependencias
-    extract >> load
+    cleaning = PythonOperator(
+        task_id='cleaning_data',
+        python_callable=cleaning_data
+    )
+
+    transform = PythonOperator(
+        task_id='transform_data',
+        python_callable=transform_data
+    )
+
+    # definición de dependencias se va hacer ELT
+    extract >> load >> cleaning >> transform
